@@ -12,7 +12,7 @@ export default function StackComponent() {
     {
       title: "Backend",
       icon: <Database size={40} strokeWidth={1.5} />,
-      items: [ "Python", ".NET", "PHP", "Node"],
+      items: ["Python", ".NET", "PHP", "Node"],
     },
     {
       title: "DevOps",
@@ -38,10 +38,10 @@ export default function StackComponent() {
         <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
           Stack We Are Using
         </h2>
-        <p className="text-sm sm:text-base text-gray-100 max-w-2xl mx-auto leading-relaxed">
-          At MResources, we love technology. If your favourite tech stack is listed here, feel free
-          to contact us for your contracting needs. We (probably) have the right match for you.
+        <p className="text-base sm:text-lg text-gray-100 max-w-2xl mx-auto leading-relaxed">
+          At BiruhaTech, we are passionate about technology. If your preferred tech stack aligns with our expertise, we invite you to reach out for your contracting needs. Our team ensures the perfect match for your project requirements.
         </p>
+
       </div>
 
       {/* Stack Cards */}

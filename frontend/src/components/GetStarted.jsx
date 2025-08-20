@@ -1,4 +1,5 @@
 // components/GetStarted.tsx
+import Link from "next/link";
 import Image from "next/image";
 
 export default function GetStarted() {
@@ -57,9 +58,9 @@ export default function GetStarted() {
           </ul>
 
           {/* CTA Button */}
-          <button className="mt-8 px-6 py-3 rounded-full bg-gradient-to-r from-cyan-400 to-indigo-700 text-white font-semibold shadow-lg hover:opacity-90 transition">
+          <Link href="#get-started" className="hover:text-cyan-200 transition">
             Get Started
-          </button>
+          </Link>
         </div>
       </div>
     </section>

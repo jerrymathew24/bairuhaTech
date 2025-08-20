@@ -7,12 +7,13 @@ import {
   FaYoutube
 } from "react-icons/fa";
 import { MdMail, MdPhone } from "react-icons/md";
+import Link from "next/link";
 
 export default function Footer() {
   return (
     <footer className="bg-slate-900 text-gray-300 py-12">
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-10">
-        
+
         {/* Logo & About */}
         <div>
           <div className="flex items-center space-x-2 mb-4">
@@ -41,11 +42,21 @@ export default function Footer() {
         {/* Company */}
         <div>
           <h3 className="text-lg font-semibold text-white mb-4">Company</h3>
-          <ul className="space-y-2 text-sm">
-            <li>About Us</li>
-            <li>Careers</li>
-            <li>Privacy Policy</li>
-            <li>Terms & Conditions</li>
+          <ul className="space-y-2 text-sm ">
+            <li>
+              <Link href="#why-us" className="hover:text-cyan-600">
+                Why Us
+              </Link>
+            </li>
+            <li>
+              <Link href="#" className="hover:text-cyan-600">Careers</Link>
+            </li>
+            <li>
+              <Link href="#" className="hover:text-cyan-600">Privacy Policy</Link>
+            </li>
+            <li>
+              <Link href="#" className="hover:text-cyan-600">Terms & Conditions</Link>
+            </li>
           </ul>
         </div>
 
