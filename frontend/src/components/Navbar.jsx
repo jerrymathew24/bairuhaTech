@@ -17,6 +17,7 @@ export default function Navbar() {
     { label: "Our Team", href: "#our-team" },
     { label: "Why Us", href: "#why-us" },
     { label: "Tech Stack", href: "#stack" },
+    { label: "Careers", href: "/careers" }, // 👈 Added Careers link
   ];
 
   return (
@@ -37,7 +38,11 @@ export default function Navbar() {
         {/* Desktop Links */}
         <div className="hidden md:flex gap-8 text-sm font-medium text-white">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-cyan-200 transition">
+            <Link
+              key={link.href}
+              href={link.href}
+              className="hover:text-cyan-200 transition"
+            >
               {link.label}
             </Link>
           ))}
@@ -54,11 +59,18 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       <div
-        className={`md:hidden ${isOpen ? "block" : "hidden"} backdrop-blur-md bg-gradient-to-r from-cyan-400/90 via-sky-500/90 to-indigo-800/90 pb-4`}
+        className={`md:hidden ${
+          isOpen ? "block" : "hidden"
+        } backdrop-blur-md bg-gradient-to-r from-cyan-400/90 via-sky-500/90 to-indigo-800/90 pb-4`}
       >
         <div className="flex flex-col items-center gap-4 text-sm font-medium text-white">
           {navLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="py-2" onClick={toggleMenu}>
+            <Link
+              key={link.href}
+              href={link.href}
+              className="py-2"
+              onClick={toggleMenu}
+            >
               {link.label}
             </Link>
           ))}
