@@ -17,7 +17,8 @@ export default function Navbar() {
     { label: "Our Team", href: "#our-team" },
     { label: "Why Us", href: "#why-us" },
     { label: "Tech Stack", href: "#stack" },
-    { label: "Careers", href: "/careers" }, // 👈 Added Careers link
+    { label: "Careers", href: "/careers" },
+    { label: "Admin Login", href: "/admin-dashboard" },
   ];
 
   return (

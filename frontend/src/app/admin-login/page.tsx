@@ -52,7 +52,7 @@ export default function AdminLogin() {
           placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 outline-none"
         />
 
         <input
@@ -60,12 +60,12 @@ export default function AdminLogin() {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 outline-none"
         />
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white p-3 rounded-lg font-medium hover:bg-blue-700 transition"
+          className="w-full bg-gradient-to-r from-cyan-400/60 via-sky-500/60 to-blue-800/60 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-sm sm:text-base hover:bg-white hover:text-black transition font-semibold shadow-md"
         >
           Login
         </button>

@@ -1,9 +1,14 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
+import SubmissionsTable from "./SubmissionsTable";
+import ApplicationsTable from "./ApplicationsTable";
+import JobForm from "./JobForm";
+import JobsList from "./JobsList";
+import { Menu, X } from "lucide-react";
 
-export default function AdminDashboard() {
+export default function Page() {
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
@@ -13,8 +18,14 @@ export default function AdminDashboard() {
     location: "",
     type: "",
   });
-  const router = useRouter();
 
+  const [activeSection, setActiveSection] = useState<
+    "submissions" | "applications" | "jobs"
+  >("submissions");
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const router = useRouter();
   const token =
     typeof window !== "undefined" ? localStorage.getItem("adminToken") : null;
 
@@ -24,31 +35,38 @@ export default function AdminDashboard() {
       return;
     }
 
-    fetch("http://localhost:3000/contact/submissions", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setSubmissions(data))
-      .catch((err) => console.error("Failed to load submissions", err));
+    const fetchData = async () => {
+      try {
+        const [subs, jobsData, apps] = await Promise.all([
+          fetch("http://localhost:3000/contact/submissions", {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((res) => res.json()),
 
-    fetch("http://localhost:3000/jobs", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setJobs(Array.isArray(data) ? data : []))
-      .catch((err) => console.error("Failed to load jobs", err));
+          fetch("http://localhost:3000/jobs", {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((res) => res.json()),
 
-    fetch("http://localhost:3000/applications", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setApplications(Array.isArray(data) ? data : []))
-      .catch((err) => console.error("Failed to load applications", err));
+          fetch("http://localhost:3000/applications", {
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((res) => res.json()),
+        ]);
+
+        setSubmissions(Array.isArray(subs) ? subs : []);
+        setJobs(Array.isArray(jobsData) ? jobsData : []);
+        setApplications(Array.isArray(apps) ? apps : []);
+      } catch (err) {
+        console.error("Failed to load data", err);
+      }
+    };
+
+    fetchData();
   }, [router, token]);
 
+  // ---- CRUD Actions ----
   const handleJobSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
+
     try {
       const res = await fetch("http://localhost:3000/jobs", {
         method: "POST",
@@ -100,11 +118,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const deleteSubmission = async (subId: number) => {
+    if (!token || !confirm("Delete this submission?")) return;
+    try {
+      const res = await fetch(
+        `http://localhost:3000/contact/submissions/${subId}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (res.ok)
+        setSubmissions(submissions.filter((sub) => sub.id !== subId));
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete submission");
+    }
+  };
+
   const downloadResume = async (filename: string) => {
     if (!token) return alert("Admin not authenticated");
     try {
       const res = await fetch(
-        `http://localhost:3000/applications/download/${filename}`,
+        `http://localhost:3000/uploads/${filename}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!res.ok) throw new Error("Failed to download resume");
@@ -125,246 +161,104 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen p-8 space-y-12 font-sans">
-      {/* Contact Submissions */}
-      <section>
-        <h1 className="text-3xl mt-11 font-extrabold text-gray-600 mb-6 text-center">
-          Contact Submissions
-        </h1>
-        {submissions.length > 0 ? (
-          <div className="overflow-x-auto rounded-2xl shadow-xl border border-cyan-300 bg-white/70 backdrop-blur-md max-h-[400px] overflow-y-auto">
-            <table className="min-w-full border-collapse text-left">
-              <thead className="bg-gradient-to-r from-cyan-400/60 via-blue-400/60 to-indigo-700/60 text-white">
-                <tr>
-                  <th className="px-6 py-3">ID</th>
-                  <th className="px-6 py-3">Name</th>
-                  <th className="px-6 py-3">Email</th>
-                  <th className="px-6 py-3">Phone</th>
-                  <th className="px-6 py-3">Enquiry</th>
-                  <th className="px-6 py-3">Company</th>
-                  <th className="px-6 py-3">Country</th>
-                  <th className="px-6 py-3">Agree?</th>
-                  <th className="px-6 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {submissions.map((sub) => (
-                  <tr
-                    key={sub.id}
-                    className="hover:bg-purple-50 transition-colors duration-200"
-                  >
-                    <td className="px-6 py-4">{sub.id}</td>
-                    <td className="px-6 py-4">
-                      {sub.firstName} {sub.lastName}
-                    </td>
-                    <td className="px-6 py-4">{sub.email}</td>
-                    <td className="px-6 py-4">{sub.phone}</td>
-                    <td className="px-6 py-4">{sub.enquiries}</td>
-                    <td className="px-6 py-4">{sub.companyName}</td>
-                    <td className="px-6 py-4">{sub.country}</td>
-                    <td className="px-6 py-4">
-                      {sub.agreeToCommunications ? (
-                        <span className="text-green-500 font-bold">✔</span>
-                      ) : (
-                        <span className="text-red-500 font-bold">✖</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={async () => {
-                          if (!token) return alert("Admin not authenticated");
-                          if (
-                            !confirm(
-                              "Are you sure you want to delete this submission?"
-                            )
-                          )
-                            return;
-                          try {
-                            const res = await fetch(
-                              `http://localhost:3000/contact/submissions/${sub.id}`,
-                              {
-                                method: "DELETE",
-                                headers: { Authorization: `Bearer ${token}` },
-                              }
-                            );
-                            if (res.ok)
-                              setSubmissions(
-                                submissions.filter((s) => s.id !== sub.id)
-                              );
-                            else alert("Failed to delete submission");
-                          } catch (err) {
-                            console.error(err);
-                            alert("Failed to delete submission");
-                          }
-                        }}
-                        className="bg-red-500 px-3 py-1 rounded-md hover:bg-red-600 text-white font-semibold shadow-md transition"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-center text-gray-600 italic">
-            No contact submissions received yet.
-          </p>
-        )}
-      </section>
+    <div className="flex min-h-screen pt-16 bg-white">
+      {/* Mobile Sidebar Toggle */}
+      <button
+        className="md:hidden fixed top-20 left-4 z-50 bg-gray-800 text-white p-2 rounded-md shadow-md"
+        onClick={() => setSidebarOpen(true)}
+      >
+        <Menu />
+      </button>
 
-      {/* Applications */}
-      <section>
-        <h1 className="text-3xl mt-11 font-extrabold text-gray-600 mb-6 text-center">
-          Job Applications
-        </h1>
-        {applications.length > 0 ? (
-          <div className="overflow-x-auto rounded-2xl shadow-xl border border-cyan-300 bg-white/70 backdrop-blur-md max-h-[400px] overflow-y-auto">
-            <table className="min-w-full border-collapse text-left">
-              <thead className="bg-gradient-to-r from-cyan-400/60 via-blue-400/60 to-indigo-700/60 text-white">
-                <tr>
-                  <th className="px-6 py-3">ID</th>
-                  <th className="px-6 py-3">Name</th>
-                  <th className="px-6 py-3">Email</th>
-                  <th className="px-6 py-3">Job</th>
-                  <th className="px-6 py-3">Applied At</th>
-                  <th className="px-6 py-3">Resume</th>
-                  <th className="px-6 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {applications.map((app) => (
-                  <tr
-                    key={app.id}
-                    className="hover:bg-cyan-50 transition-colors duration-200"
-                  >
-                    <td className="px-6 py-4">{app.id}</td>
-                    <td className="px-6 py-4">{app.applicantName}</td>
-                    <td className="px-6 py-4">{app.email}</td>
-                    <td className="px-6 py-4">{app.job?.title}</td>
-                    <td className="px-6 py-4">
-                      {new Date(app.appliedAt).toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => downloadResume(app.resumePath)}
-                        className="bg-green-500 px-3 py-1 rounded-md hover:bg-green-600 text-white font-semibold shadow-md transition"
-                      >
-                        Download
-                      </button>
-                    </td>
-                    <td className="px-6 py-4 space-x-2">
-                      <button
-                        onClick={() => deleteApplication(app.id)}
-                        className="bg-red-500 px-3 py-1 rounded-md hover:bg-red-600 text-white font-semibold shadow-md transition"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-center text-gray-600 italic">
-            No applications received yet.
-          </p>
-        )}
-      </section>
-
-      {/* Jobs Management */}
-      <section>
-        <h1 className="text-3xl mt-11 font-extrabold text-gray-600 mb-6 text-center">
-          Add New Job Opening
-        </h1>
-
-        {/* Job Form */}
-        <form
-          onSubmit={handleJobSubmit}
-          className="bg-white/70 backdrop-blur-md p-6 rounded-2xl space-y-4 max-w-md mx-auto border border-blue-300"
-        >
-          <input
-            type="text"
-            placeholder="Job Title"
-            value={jobForm.title}
-            onChange={(e) => setJobForm({ ...jobForm, title: e.target.value })}
-            className="w-full p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
-          <textarea
-            placeholder="Description"
-            value={jobForm.description}
-            onChange={(e) =>
-              setJobForm({ ...jobForm, description: e.target.value })
-            }
-            className="w-full p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Location"
-            value={jobForm.location}
-            onChange={(e) =>
-              setJobForm({ ...jobForm, location: e.target.value })
-            }
-            className="w-full p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
-          <input
-            type="text"
-            placeholder="Type (Full-time / Part-time)"
-            value={jobForm.type}
-            onChange={(e) => setJobForm({ ...jobForm, type: e.target.value })}
-            className="w-full p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-            required
-          />
+      {/* Sidebar */}
+      <aside
+        className={`fixed md:static top-0 left-0 h-full md:h-auto w-64 bg-white backdrop-blur-md border-r border-gray-300 p-6 transform transition-transform duration-300 z-40 
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-gray-700">Admin Menu</h2>
           <button
-            type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg transition-all"
+            className="md:hidden text-gray-700 hover:text-gray-900"
+            onClick={() => setSidebarOpen(false)}
           >
-            Add Job
+            <X />
           </button>
-        </form>
-
-        {/* Jobs List */}
-        <div className="mt-8 max-w-3xl mx-auto">
-          <h1 className="text-3xl mt-11 font-extrabold text-gray-700 mb-6 text-center">
-            Posted Job Openings
-          </h1>
-          {jobs.length > 0 ? (
-            <ul className="space-y-4">
-              {jobs.map((job) => (
-                <li
-                  key={job.id}
-                  className="p-4 bg-white/70 backdrop-blur-md rounded-2xl  flex justify-between items-center border border-purple-300 hover:scale-105 transition-transform duration-200"
-                >
-                  <div>
-                    <h3 className="font-bold text-blue-800 text-lg">
-                      {job.title}
-                    </h3>
-                    <p className="text-blue-600">{job.description}</p>
-                    <p className="text-sm text-blue-500">
-                      {job.location} • {job.type}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => deleteJob(job.id)}
-                    className="bg-red-500 px-3 py-1 rounded-md hover:bg-red-600 text-white font-semibold shadow-md transition"
-                  >
-                    Delete
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-600 italic text-center">
-              No jobs posted yet.
-            </p>
-          )}
         </div>
-      </section>
+        <ul className="space-y-4">
+          <li>
+            <button
+              onClick={() => {
+                setActiveSection("submissions");
+                setSidebarOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2 rounded-lg transition ${
+                activeSection === "submissions"
+                  ? "bg-gradient-to-r from-cyan-400 via-sky-500 to-indigo-800 text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              Contact Submissions
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => {
+                setActiveSection("applications");
+                setSidebarOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2 rounded-lg transition ${
+                activeSection === "applications"
+                  ? "bg-gradient-to-r from-cyan-400 via-sky-500 to-indigo-800 text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              Job Applications
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => {
+                setActiveSection("jobs");
+                setSidebarOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2 rounded-lg transition ${
+                activeSection === "jobs"
+                  ? "bg-gradient-to-r from-cyan-400 via-sky-500 to-indigo-800 text-white"
+                  : "bg-gray-100 hover:bg-gray-200"
+              }`}
+            >
+              Jobs Management
+            </button>
+          </li>
+        </ul>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
+        {activeSection === "submissions" && (
+          <SubmissionsTable
+            submissions={submissions}
+            onDelete={deleteSubmission}
+          />
+        )}
+        {activeSection === "applications" && (
+          <ApplicationsTable
+            applications={applications}
+            onDelete={deleteApplication}
+            onDownload={downloadResume}
+          />
+        )}
+        {activeSection === "jobs" && (
+          <div className="space-y-8">
+            <JobForm
+              jobForm={jobForm}
+              setJobForm={setJobForm}
+              onSubmit={handleJobSubmit}
+            />
+            <JobsList jobs={jobs} onDelete={deleteJob} />
+          </div>
+        )}
+      </main>
     </div>
   );
 }
